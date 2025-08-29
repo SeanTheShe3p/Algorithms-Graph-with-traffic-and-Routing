@@ -1,3 +1,6 @@
+import re
+import sys
+
 def add_node():
     for row in weighted_array:
         row.append(0)
@@ -22,7 +25,7 @@ def remove_edge(start, destination):
 
 def to_adjacency_list():
     i, j = 0 , 0
-    fin = [("city"+str(i)+":") for i in range(len(weighted_array) - 1)]
+    fin = [("city"+str(i)+":") for i in range(len(weighted_array))]
     first = True
     for rows in weighted_array:
         j = 0  
@@ -40,28 +43,56 @@ def to_adjacency_list():
         print(routes)
 
 
-start, destination = (100, 100)
-weighted_array = [[ 0 for i in range(start+1)] for j in range(destination+1)]
+fileinput = sys.argv[1]
+pattern1 = re.compile(r"City(\d+) City(\d+) (\d+)")
 
-with open("input1.txt", "rt") as textFile:
-    lines = textFile.readlines()
-    for node in lines [1:11]:
-        for edge in lines [102:]:
-            if node.strip('\n') == edge [:6].strip(' '):
+try:
+    with open(fileinput, 'r') as file:
+        number_of_cities = 0
+        number_of_roads = 0
+        city_counter_mode = False
+        road_counter_mode = False
+        for line in file:
+            clean_line = line.strip()
+            if clean_line == 'CITIES':
+                city_counter_mode = True
+                continue
+            if clean_line == 'ROADS':
+                city_counter_mode = False
+                road_counter_mode = True
+                continue
+            if city_counter_mode and clean_line:
+                number_of_cities += 1
+            if road_counter_mode and clean_line:
+                number_of_roads += 1
+    
+        weighted_array = [[0 for _ in range(number_of_cities)] for _ in range(number_of_cities)]
+
+        file.seek(0)
+
+        road_mode = False
+        
+        for line in file:
+            clean_line = line.strip()
+
+
+            match = pattern1.search(clean_line)
+            if match:
+                start = int(match.group(1))
+                destination = int(match.group(2))
+                weight = int(match.group(3))
+                weighted_array[start][destination] = weight
+
+
+
+except FileNotFoundError:
+    print(f"Error: The file '{fileinput}' was not found.")
+except Exception as e:
+    print(f"An error occurred: {e}")
+
+
+
+
 
                 
-                start = int(node.strip('\n')[4:6])
-                m = edge[10:].replace('\n','').split()
-                destination = int(m[0])
-                w = int(m[1])
-                weighted_array[start][destination] += w
-
-    for node in lines[11:101]:
-        for edge in lines[102:]:
-            if node.strip('\n') == edge [:7].strip(' '):
-
-                start = int(node.strip('\n')[4:7])
-                m = edge[11:].replace('\n','').split()
-                destination = int(m[0])
-                w = int(m[1])
-                weighted_array[start][destination] += w
+to_adjacency_list()
